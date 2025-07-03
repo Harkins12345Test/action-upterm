@@ -53,12 +53,20 @@ export async function run() {
     } else {
       core.info("Auto-generating ~/.ssh/known_hosts by attempting connection to uptermd.upterm.dev")
       try {
-        await execShellCommand("ssh -i ~/.ssh/id_ed25519 uptermd.upterm.dev")
+        // await execShellCommand("ssh -i ~/.ssh/id_ed25519 uptermd.upterm.dev")
+        if (fs.existsSync(path.join(sshPath, "known_hosts"))) {
+          const foundUptermKeys = await execShellCommand("ssh-keygen -l -F uptermd.upterm.dev")
+          if (foundUptermKeys.length > 0) {
+            await execShellCommand(`echo ${foundUptermKeys}`)
+            const uptermKeysArray = foundUptermKeys.split(" ")
+            uptermKeysArray.forEach((key) => await execShellCommand(`echo ${key}`))
+          }
+        } else {
+          await execShellCommand("ssh-keyscan -H uptermd.upterm.dev >> ~/.ssh/known_hosts")
+          const uptermKey = await execShellCommand("ssh-keygen -F uptermd.upterm.dev")
+        }
       } catch { }
       // @cert-authority entry is the mandatory entry. generate the entry based on the known_hosts entry key
-      try {
-        await execShellCommand('cat <(cat ~/.ssh/known_hosts | awk \'{ print "@cert-authority * " $2 " " $3 }\') >> ~/.ssh/known_hosts')
-      } catch { }
     }
 
     let authorizedKeysParameter = ""
