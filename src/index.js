@@ -57,9 +57,9 @@ export async function run() {
         if (fs.existsSync(path.join(sshPath, "known_hosts"))) {
           const foundUptermKeys = await execShellCommand("ssh-keygen -l -F uptermd.upterm.dev")
           if (foundUptermKeys.length > 0) {
-            await execShellCommand(`echo ${foundUptermKeys}`)
+            core.info(await execShellCommand(`echo ${foundUptermKeys}`))
             const uptermKeysArray = foundUptermKeys.split(" ")
-            uptermKeysArray.forEach((key) => await execShellCommand(`echo ${key}`))
+            uptermKeysArray.forEach((key) => core.info(await execShellCommand(`echo ${key}`)))
           }
         } else {
           await execShellCommand("ssh-keyscan -H uptermd.upterm.dev >> ~/.ssh/known_hosts")
