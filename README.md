@@ -28,7 +28,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup upterm session
-      uses: lhotari/action-upterm@v1
+      uses: Harkins12345Test/action-upterm@v1
 ```
 
 To get the ssh connection string, just open the `Checks` tab in your Pull Request and scroll to the bottom.
@@ -46,7 +46,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup upterm session
-      uses: lhotari/action-upterm@v1
+      uses: Harkins12345Test/action-upterm@v1
       with:
         ## limits ssh access and adds the ssh public key for the user which triggered the workflow
         limit-access-to-actor: true
@@ -72,7 +72,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup upterm session
-      uses: lhotari/action-upterm@v1
+      uses: Harkins12345Test/action-upterm@v1
       with:
         ## limits ssh access and adds the ssh public key for the user which triggered the workflow
         limit-access-to-actor: true
@@ -97,7 +97,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup upterm session
-      uses: lhotari/action-upterm@v1
+      uses: Harkins12345Test/action-upterm@v1
       if: ${{ failure() }}
       with:
         ## If no one connects after 5 minutes, shut down server.
