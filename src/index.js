@@ -61,7 +61,7 @@ export async function run() {
           core.info("Found upterm keys")
           if (foundUptermKeys.length > 0) {
             core.info("Keys larger than 0")
-            core.info(await execShellCommand(`echo ${foundUptermKeys}`))
+            console.debug(foundUptermKeys)
             core.info("Splitting keys")
             const uptermKeysArray = foundUptermKeys.split(" ")
             core.info("Running for loop")
