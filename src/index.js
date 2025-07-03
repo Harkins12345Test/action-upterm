@@ -51,19 +51,28 @@ export async function run() {
       fs.appendFileSync(path.join(sshPath, "known_hosts"), core.getInput("ssh-known-hosts"))
       core.info(await execShellCommand('cat ~/.ssh/known_hosts'))
     } else {
-      core.info("Auto-generating ~/.ssh/known_hosts by attempting connection to uptermd.upterm.dev")
+      core.info("Auto-generating ~/.ssh/known_hosts by getting key from uptermd.upterm.dev")
       try {
         // await execShellCommand("ssh -i ~/.ssh/id_ed25519 uptermd.upterm.dev")
+        core.info("Checking if known_host exists")
         if (fs.existsSync(path.join(sshPath, "known_hosts"))) {
+          core.info("known_host exists")
           const foundUptermKeys = await execShellCommand("ssh-keygen -l -F uptermd.upterm.dev")
+          core.info("Found upterm keys")
           if (foundUptermKeys.length > 0) {
+            core.info("Keys larger than 0")
             core.info(await execShellCommand(`echo ${foundUptermKeys}`))
+            core.info("Splitting keys")
             const uptermKeysArray = foundUptermKeys.split(" ")
+            core.info("Running for loop")
             uptermKeysArray.forEach((key) => core.info(await execShellCommand(`echo ${key}`)))
           }
         } else {
+          core.info("known_host does not exist")
           await execShellCommand("ssh-keyscan -H uptermd.upterm.dev >> ~/.ssh/known_hosts")
+          core.info("Got public key")
           const uptermKey = await execShellCommand("ssh-keygen -F uptermd.upterm.dev")
+          core.info("Finding key again")
         }
       } catch { }
       // @cert-authority entry is the mandatory entry. generate the entry based on the known_hosts entry key
