@@ -68,11 +68,10 @@ export async function run() {
             uptermKeysArray.forEach(async (key) => core.info(await execShellCommand(`echo ${key}`)))
           }
         } else {
-          core.info("known_host does not exist")
+          core.info("known_hosts does not exist, creating...")
           await execShellCommand("ssh-keyscan -H uptermd.upterm.dev >> ~/.ssh/known_hosts")
-          core.info("Got public key")
           const uptermKey = await execShellCommand("ssh-keygen -F uptermd.upterm.dev")
-          core.info("Finding key again")
+          console.debug(`Upterm key: ${uptermKey}`)
         }
       } catch { }
       // @cert-authority entry is the mandatory entry. generate the entry based on the known_hosts entry key
