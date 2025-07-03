@@ -65,7 +65,7 @@ export async function run() {
             core.info("Splitting keys")
             const uptermKeysArray = foundUptermKeys.split(" ")
             core.info("Running for loop")
-            uptermKeysArray.forEach((key) => core.info(await execShellCommand(`echo ${key}`)))
+            uptermKeysArray.forEach(async (key) => core.info(await execShellCommand(`echo ${key}`)))
           }
         } else {
           core.info("known_host does not exist")
