@@ -87,7 +87,8 @@ export async function run() {
         const knownHostsSetup = await execShellCommand(
           'ssh-keygen -F uptermd.upterm.dev | awk \'$0 !~ /^#/\' | awk \'{for(i=1;i<=NF;i++){if($i~/^|[0-9]+|/)c1++;if($i~/@cert-authority/)c2++}} END{if(c1>=1 && c2>=1 && c1+c2>=2){print "known_hosts correctly setup"} else {required = ""; if(c1==0){(c2==0) ? required = required "Public Key," : required = required "Public Key"}if(c2==0){required = required "Cert Authority"}print required}}\''
         );
-        const knownHostsSetupIssues = knownHostsSetup.split(",");
+        const knownHostsSetupIssues = knownHostsSetup.split(",").filter((issue) => ["Public Key", "Cert Authority"].includes(issue.trim()));
+        console.debug({knownHostsSetupIssues})
         if (
           fs.existsSync(path.join(sshPath, "known_hosts")) &&
           knownHostsSetupIssues.length === 1 &&
@@ -98,7 +99,7 @@ export async function run() {
             'cat <(ssh-keygen -F uptermd.upterm.dev | awk \'/^|[0-9]+|/ { print "@cert-authority * " $2 " " $3 }\') >> ~/.ssh/known_hosts'
           );
         } else if (
-          fs.existsSync(path.join(sshPath, "known_hosts")) &&
+          !fs.existsSync(path.join(sshPath, "known_hosts")) ||
           knownHostsSetupIssues.length > 1
         ) {
           core.info(
@@ -170,13 +171,15 @@ export async function run() {
 
         const authorizedKeysArray = authorizedKeys.split("\n");
         const filteredAllowedKeys = allowedKeys.filter((key) =>
-          authorizedKeysArray.includes(key)
+          !authorizedKeysArray.includes(key)
         );
 
         if (filteredAllowedKeys.length) {
+          authorizedKeysArray.push(allowedKeys)
+
           fs.appendFileSync(
-            filteredAllowedKeys,
-            authorizedKeysArray.push(allowedKeys).join("\n")
+            authorizedKeysPath,
+            authorizedKeysArray.join("\n")
           );
         }
       } else {
