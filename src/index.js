@@ -225,14 +225,17 @@ export async function run() {
 
     core.debug("Fetching connection strings");
     await sleep(1000);
+
+    console.debug("Entering main loop");
     
     const currentSession = await execShellCommand(
             'bash -c "upterm session current --admin-socket ~/.upterm/*.sock"'
           )
 
+    await sleep(30000);
+
     exportVariable("ssh_connection_info", currentSession)
 
-    console.debug("Entering main loop");
     while (true) {
       try {
         core.info(
