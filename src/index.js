@@ -4,6 +4,7 @@ import path from "path";
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { Octokit } from "@octokit/rest";
+import { exportVariable } from "@actions/core";
 const { createActionAuth } = require("@octokit/auth-action");
 
 import { execShellCommand } from "./helpers";
@@ -224,6 +225,12 @@ export async function run() {
 
     core.debug("Fetching connection strings");
     await sleep(1000);
+    
+    const currentSession = await execShellCommand(
+            'bash -c "upterm session current --admin-socket ~/.upterm/*.sock"'
+          )
+
+    exportVariable("ssh_connection_info", currentSession)
 
     console.debug("Entering main loop");
     while (true) {
