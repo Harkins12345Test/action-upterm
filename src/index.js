@@ -47,14 +47,26 @@ export async function run() {
       core.debug("SSH key already exists");
     }
 
-    core.debug("Configuring ssh client");
-    const sshConfigFile = fs.readFileSync(path.join(sshPath, "config"), {encoding: "utf-8"})
-    console.debug(sshConfigFile)
-    fs.appendFileSync(
-      path.join(sshPath, "config"),
+    const sshConfigData =
       "Host *\nStrictHostKeyChecking no\nCheckHostIP no\n" +
-        "TCPKeepAlive yes\nServerAliveInterval 30\nServerAliveCountMax 180\nVerifyHostKeyDNS yes\nUpdateHostKeys yes\n"
-    );
+      "TCPKeepAlive yes\nServerAliveInterval 30\nServerAliveCountMax 180\nVerifyHostKeyDNS yes\nUpdateHostKeys yes\n";
+
+    core.debug("Configuring ssh client");
+    if (fs.existsSync(path.join(sshPath, "config"))) {
+      const sshConfigFile = fs.readFileSync(path.join(sshPath, "config"), {
+        encoding: "utf-8",
+      });
+      const sshConfigFileArray = sshConfigFile.split("\n");
+      if (
+        !sshConfigData
+          .split("\n")
+          .every((config) => sshConfigFileArray.includes(config))
+      ) {
+        fs.appendFileSync(path.join(sshPath, "config"), sshConfigData);
+      }
+    } else {
+      fs.appendFileSync(path.join(sshPath, "config"), sshConfigData);
+    }
     // entry in known hosts file in mandatory in upterm. attempt ssh connection to upterm server
     // to get the host key added to ~/.ssh/known_hosts
     if (
@@ -88,7 +100,7 @@ export async function run() {
         } else if (
           fs.existsSync(path.join(sshPath, "known_hosts")) &&
           knownHostsSetupIssues.length > 1
-        )  {
+        ) {
           core.info(
             "Generating ~/.ssh/known_hosts by getting key from uptermd.upterm.dev"
           );
@@ -99,9 +111,7 @@ export async function run() {
             'cat <(ssh-keygen -F uptermd.upterm.dev | awk \'/^|[0-9]+|/ { print "@cert-authority * " $2 " " $3 }\') >> ~/.ssh/known_hosts'
           );
         } else {
-          core.info(
-            "No issues found with known_hosts"
-          );
+          core.info("No issues found with known_hosts");
         }
       } catch {}
       // @cert-authority entry is the mandatory entry. generate the entry based on the known_hosts entry key
@@ -153,8 +163,25 @@ export async function run() {
       }
       core.info(`Fetched ${allowedKeys.length} ssh public keys`);
       const authorizedKeysPath = path.join(sshPath, "authorized_keys");
-      const authorizedKeys = fs.readFileSync(authorizedKeysPath, {encoding: "utf-8"})
-      fs.appendFileSync(authorizedKeysPath, allowedKeys.join("\n"));
+      if (fs.existsSync(authorizedKeysPath)) {
+        const authorizedKeys = fs.readFileSync(authorizedKeysPath, {
+          encoding: "utf-8",
+        });
+
+        const authorizedKeysArray = authorizedKeys.split("\n");
+        const filteredAllowedKeys = allowedKeys.filter((key) =>
+          authorizedKeysArray.includes(key)
+        );
+
+        if (filteredAllowedKeys.length) {
+          fs.appendFileSync(
+            filteredAllowedKeys,
+            authorizedKeysArray.push(allowedKeys).join("\n")
+          );
+        }
+      } else {
+        fs.appendFileSync(authorizedKeysPath, allowedKeys.join("\n"));
+      }
       authorizedKeysParameter = `-a "${authorizedKeysPath}"`;
     }
 
